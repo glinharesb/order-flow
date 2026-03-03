@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"math"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -89,7 +90,7 @@ func (s *OrderServer) ListOrders(ctx context.Context, req *pb.ListOrdersRequest)
 	return &pb.ListOrdersResponse{
 		Orders:        pbOrders,
 		NextPageToken: nextToken,
-		TotalCount:    int32(total),
+		TotalCount:    int32(min(total, math.MaxInt32)), // #nosec G115 -- capped by min
 	}, nil
 }
 

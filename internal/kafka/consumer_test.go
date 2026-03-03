@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"testing"
 )
 
@@ -27,7 +28,7 @@ func TestDLQTopic(t *testing.T) {
 func TestNoopPublisher(t *testing.T) {
 	pub := &NoopPublisher{}
 
-	if err := pub.Publish(nil, "test-topic", []byte("key"), []byte("value"), nil); err != nil {
+	if err := pub.Publish(context.TODO(), "test-topic", []byte("key"), []byte("value"), nil); err != nil {
 		t.Fatalf("Publish: %v", err)
 	}
 

@@ -28,11 +28,17 @@ func idempotencyKey(key string) string {
 // (first time), false if it already existed (duplicate). An error is returned for
 // infrastructure failures.
 func (s *IdempotencyStore) CheckAndSet(ctx context.Context, key string) (bool, error) {
-	ok, err := s.client.SetNX(ctx, idempotencyKey(key), "1", s.ttl).Result()
+	err := s.client.SetArgs(ctx, idempotencyKey(key), "1", redis.SetArgs{
+		Mode: "NX",
+		TTL:  s.ttl,
+	}).Err()
+	if errors.Is(err, redis.Nil) {
+		return false, nil
+	}
 	if err != nil {
 		return false, fmt.Errorf("idempotency set nx: %w", err)
 	}
-	return ok, nil
+	return true, nil
 }
 
 // MemoryIdempotencyStore is an in-memory implementation for testing.

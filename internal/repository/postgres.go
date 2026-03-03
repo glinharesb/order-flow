@@ -217,10 +217,8 @@ func (r *PostgresOrder) List(ctx context.Context, filter domain.ListOrdersFilter
 		where = "WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	// Count total matching.
+	// Count total matching (excluding cursor condition).
 	var total int
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM orders %s", where)
-	// For count, we exclude the cursor condition.
 	countArgs := make([]any, 0, len(args))
 	countConditions := conditions
 	if filter.PageToken != "" {
@@ -230,7 +228,7 @@ func (r *PostgresOrder) List(ctx context.Context, filter domain.ListOrdersFilter
 	if len(countConditions) > 0 {
 		countWhere = "WHERE " + strings.Join(countConditions, " AND ")
 	}
-	countQuery = fmt.Sprintf("SELECT COUNT(*) FROM orders %s", countWhere)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM orders %s", countWhere)
 	for i, a := range args {
 		if filter.PageToken != "" && i == len(args)-1 {
 			break

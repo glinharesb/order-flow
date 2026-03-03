@@ -123,7 +123,11 @@ func main() {
 	// Health HTTP server with Prometheus metrics.
 	healthSrv := health.NewServer(db)
 	healthSrv.RegisterHandler("GET /metrics", promhttp.Handler())
-	httpSrv := &http.Server{Addr: cfg.HTTPAddr, Handler: healthSrv.Handler()}
+	httpSrv := &http.Server{
+		Addr:              cfg.HTTPAddr,
+		Handler:           healthSrv.Handler(),
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	// Start all components.
 	go func() {
