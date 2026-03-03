@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-flow
+  namespace: order-flow
+  labels:
+    app.kubernetes.io/name: order-flow
+spec:
+  selector:
+    app.kubernetes.io/name: order-flow
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+      protocol: TCP
+    - name: http
+      port: 8081
+      targetPort: http
+      protocol: TCP
+  type: ClusterIP

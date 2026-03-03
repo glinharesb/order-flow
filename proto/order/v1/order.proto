@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package order.v1;
+
+option go_package = "github.com/glinharesb/order-flow/gen/order/v1;orderpb";
+
+import "google/protobuf/timestamp.proto";
+
+// OrderService manages the lifecycle of customer orders.
+service OrderService {
+  // CreateOrder places a new order with the given items.
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  // GetOrder retrieves a single order by its ID.
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+  // ListOrders returns orders filtered by optional criteria.
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  // CancelOrder transitions an order to the cancelled state.
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+}
+
+// OrderStatus represents the lifecycle state of an order.
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_CREATED = 1;
+  ORDER_STATUS_PAYMENT_PENDING = 2;
+  ORDER_STATUS_CONFIRMED = 3;
+  ORDER_STATUS_SHIPPED = 4;
+  ORDER_STATUS_DELIVERED = 5;
+  ORDER_STATUS_CANCELLED = 6;
+}
+
+// OrderItem represents a single line item within an order.
+message OrderItem {
+  // product_id identifies the product being ordered.
+  string product_id = 1;
+  // quantity is the number of units ordered.
+  int32 quantity = 2;
+  // unit_price is the price per unit in cents.
+  int64 unit_price = 3;
+}
+
+// Order is the full representation of a customer order.
+message Order {
+  // id is the unique identifier of the order.
+  string id = 1;
+  // customer_id identifies the customer who placed the order.
+  string customer_id = 2;
+  // status is the current lifecycle state.
+  OrderStatus status = 3;
+  // items are the line items in the order.
+  repeated OrderItem items = 4;
+  // total_amount is the sum of all item amounts in cents.
+  int64 total_amount = 5;
+  // idempotency_key is the client-provided deduplication key.
+  string idempotency_key = 6;
+  // created_at is when the order was placed.
+  google.protobuf.Timestamp created_at = 7;
+  // updated_at is when the order was last modified.
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// CreateOrderRequest is the request to place a new order.
+message CreateOrderRequest {
+  // customer_id identifies the customer placing the order.
+  string customer_id = 1;
+  // items are the line items to include in the order.
+  repeated OrderItem items = 2;
+  // idempotency_key is the client-provided deduplication key.
+  string idempotency_key = 3;
+}
+
+// CreateOrderResponse contains the newly created order.
+message CreateOrderResponse {
+  Order order = 1;
+}
+
+// GetOrderRequest identifies the order to retrieve.
+message GetOrderRequest {
+  string id = 1;
+}
+
+// GetOrderResponse contains the requested order.
+message GetOrderResponse {
+  Order order = 1;
+}
+
+// ListOrdersRequest specifies optional filters for listing orders.
+message ListOrdersRequest {
+  // customer_id filters orders by customer.
+  string customer_id = 1;
+  // status filters orders by lifecycle state.
+  OrderStatus status = 2;
+  // page_size is the maximum number of orders to return.
+  int32 page_size = 3;
+  // page_token is the opaque pagination token from a previous response.
+  string page_token = 4;
+}
+
+// ListOrdersResponse contains the matching orders.
+message ListOrdersResponse {
+  repeated Order orders = 1;
+  // next_page_token is the token to use for the next page, empty if no more.
+  string next_page_token = 2;
+  // total_count is the total number of matching orders.
+  int32 total_count = 3;
+}
+
+// CancelOrderRequest identifies the order to cancel.
+message CancelOrderRequest {
+  string id = 1;
+  // reason is an optional cancellation reason.
+  string reason = 2;
+}
+
+// CancelOrderResponse contains the updated order after cancellation.
+message CancelOrderResponse {
+  Order order = 1;
+}
