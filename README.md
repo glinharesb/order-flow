@@ -4,53 +4,19 @@ Order processing system with event-driven architecture built in Go. Demonstrates
 
 ## Architecture
 
-```
-                    ┌─────────────┐
-                    │   Client    │
-                    │  (gRPC)     │
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  gRPC Server│
-                    │ Interceptors│
-                    │ Recovery    │
-                    │ Logging     │
-                    │ RateLimit   │
-                    │ Auth        │
-                    │ OTel        │
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │OrderService │
-                    │ Cache-aside │
-                    │ Idempotency │
-                    └──┬───┬───┬──┘
-                       │   │   │
-              ┌────────┘   │   └────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │PostgreSQL│ │  Redis   │ │  Outbox   │
-        │  Orders  │ │  Cache   │ │  Table    │
-        │  Items   │ │Idempotency│ │          │
-        └──────────┘ └──────────┘ └─────┬────┘
-                                        │
-                                 ┌──────▼──────┐
-                                 │ Outbox Relay │
-                                 │  (poll loop) │
-                                 └──────┬──────┘
-                                        │
-                                 ┌──────▼──────┐
-                                 │    Kafka     │
-                                 │order.created │
-                                 │order.cancelled│
-                                 └──────┬──────┘
-                                        │
-                                 ┌──────▼──────┐
-                                 │  Consumer    │
-                                 │EventProcessor│
-                                 │  DLQ retry   │
-                                 └─────────────┘
-```
+**Request flow:** Client → gRPC Interceptors → OrderService → PostgreSQL / Redis / Outbox
+
+**Event flow:** Outbox Relay → Kafka → EventProcessor (with DLQ)
+
+| Component | Responsibility |
+|-----------|---------------|
+| **gRPC Interceptors** | Recovery, logging, rate limiting, auth, OpenTelemetry |
+| **OrderService** | Business logic, cache-aside reads, idempotent writes |
+| **PostgreSQL** | Orders, items, outbox table (single transaction) |
+| **Redis** | Cache-aside for reads, `SET NX` idempotency store |
+| **Outbox Relay** | Polls unpublished outbox entries, publishes to Kafka |
+| **Kafka** | Event streaming (`order.created`, `order.cancelled`) |
+| **EventProcessor** | Consumes events, DLQ after 3 failed retries |
 
 ## Order State Machine
 
