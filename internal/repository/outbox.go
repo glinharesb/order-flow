@@ -31,7 +31,7 @@ func (r *PostgresOutbox) FetchUnpublished(ctx context.Context, limit int) ([]Out
 	if err != nil {
 		return nil, fmt.Errorf("query outbox: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var entries []OutboxEntry
 	for rows.Next() {

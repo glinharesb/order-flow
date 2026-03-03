@@ -98,7 +98,7 @@ func (r *PostgresOrder) CreateOrderTx(ctx context.Context, order domain.Order, e
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO orders (id, customer_id, status, total_amount, idempotency_key, created_at, updated_at)
@@ -172,7 +172,7 @@ func (r *PostgresOrder) getItems(ctx context.Context, orderID uuid.UUID) ([]doma
 	if err != nil {
 		return nil, fmt.Errorf("query order_items: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var items []domain.OrderItem
 	for rows.Next() {
@@ -253,7 +253,7 @@ func (r *PostgresOrder) List(ctx context.Context, filter domain.ListOrdersFilter
 	if err != nil {
 		return nil, 0, fmt.Errorf("query orders: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var orders []domain.Order
 	for rows.Next() {
@@ -299,7 +299,7 @@ func (r *PostgresOrder) UpdateStatusTx(ctx context.Context, id uuid.UUID, status
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	result, err := tx.ExecContext(ctx, `
 		UPDATE orders SET status = $1, updated_at = $2 WHERE id = $3

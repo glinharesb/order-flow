@@ -35,7 +35,7 @@ func (s *Server) RegisterHandler(pattern string, handler http.Handler) {
 func (s *Server) healthz(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
 func (s *Server) readyz(w http.ResponseWriter, _ *http.Request) {
@@ -45,11 +45,11 @@ func (s *Server) readyz(w http.ResponseWriter, _ *http.Request) {
 	if err := s.db.PingContext(ctx); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusServiceUnavailable)
-		json.NewEncoder(w).Encode(map[string]string{"status": "not ready", "error": err.Error()})
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "not ready", "error": err.Error()})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "ready"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ready"})
 }

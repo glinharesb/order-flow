@@ -54,7 +54,7 @@ func main() {
 		slog.Error("open database", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(10)
@@ -70,7 +70,7 @@ func main() {
 
 	// Redis.
 	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 
 	// Repositories.
 	orderRepo := repository.NewPostgresOrder(db)
@@ -82,7 +82,7 @@ func main() {
 
 	// Kafka publisher.
 	publisher := kafka.NewKafkaPublisher(cfg.KafkaBrokers)
-	defer publisher.Close()
+	defer func() { _ = publisher.Close() }()
 
 	// Services.
 	orderSvc := service.NewOrderService(orderRepo, redisCache, idemStore, cfg.CacheTTL, logger)
